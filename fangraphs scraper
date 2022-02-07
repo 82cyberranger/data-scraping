@@ -1,0 +1,73 @@
+from typing import Text
+from bs4 import BeautifulSoup
+from pandas.core.frame import DataFrame
+import requests
+import pandas as pd
+import numpy as np
+Hitting_Dict = {0: 'Standard', 1: 'Advanced', 2: 'Batted Ball', 3: 'Win Probability', 4: 'Pitch Type', 5: 'Plate Discipline', 6: 'Value', 7: 'Pitch Value', 8: 'Dashboard', 16: 'Pitch Type', 17: 'Velocity', 18: 'H movement', 19: 'V movement', 20: 'Pitch Type Value', 21: 'Pitch Value/100', 22: 'Pitch Discipine', 23: '+Stats', 24: 'Statcast'}
+
+#How to loop through URLs with 2 variables (table and year)? Could create list of URLs that loops through tables and has year variable still moveable? e.g. URL1 Key = 0, year = "str(yr)"?
+url_list = []
+yr = [2018, 2019, 2020, 2021]
+for TableNo in Hitting_Dict:
+    url = ('https://www.fangraphs.com/leaders.aspx?pos=all&stats=bat&lg=all&qual=0&type=' + str(TableNo) + '&season=' + str(yr) + '&month=0&season1=2018&ind=0&page=1_1500')
+    url_list.append(url)
+print(yr)
+print(url_list)
+TableNo = 1
+print(TableNo)
+for u in url_list:
+    big_df = pd.DataFrame()
+    page = requests.get(u)
+    soup = BeautifulSoup(page.content, 'html.parser')
+    Table1 = soup.find('table', id = 'LeaderBoard1_dg1_ctl00')
+    my_headers = [[a.text for a in row.find_all(['th'])] for row in Table1.find_all('tr')]
+    big_df = big_df.append(my_headers, ignore_index=True)
+#pulling table from HTML     
+#finding and filling table columns
+    for yr in range(2018, 2022):
+        my_data = [[a.text for a in row.find_all(['td'])] for row in Table1.find_all('tr')]
+        df_data = pd.DataFrame(my_data)
+        df_data = df_data.dropna()
+        df_data = df_data.append(df_data, ignore_index=True)
+        df_data.insert(0,'Year', yr)
+        big_df = big_df.append(df_data, ignore_index=True)
+        big_df = big_df.drop_duplicates()
+        try:
+                big_df.to_csv('big_df' + str(TableNo) + '.csv', index=False)
+                print('It is done!')
+        except:
+                print("error")
+        TableNo += 1
+
+def fangraphs_batting(): 
+    yr = int
+    yr = 2018
+    big_df = pd.DataFrame()
+    url = ('https://www.fangraphs.com/leaders.aspx?pos=all&stats=bat&lg=all&qual=0&type=8&season=' + str(yr) + '&month=0&season1=2018&ind=0&page=1_1500')
+    page = requests.get(url)
+    soup = BeautifulSoup(page.content, 'html.parser')
+    Table1 = soup.find('table', id = 'LeaderBoard1_dg1_ctl00')
+    my_headers = [[a.text for a in row.find_all(['th'])] for row in Table1.find_all('tr')]
+    big_df = big_df.append(my_headers, ignore_index=True)
+#pulling table from HTML
+    for yr in range (2018, 2022):
+        url = ('https://www.fangraphs.com/leaders.aspx?pos=all&stats=bat&lg=all&qual=0&type=8&season=' + str(yr) + '&month=0&season1=2018&ind=0&page=1_1500')
+        page = requests.get(url)
+        soup = BeautifulSoup(page.content, 'html.parser')
+#pulling table from HTML
+        Table1 = soup.find('table', id = 'LeaderBoard1_dg1_ctl00')        
+#finding and filling table columns
+        my_data = [[a.text for a in row.find_all(['td'])] for row in Table1.find_all('tr')]
+        df_data = pd.DataFrame(my_data)
+        df_data = df_data.dropna()
+        df_data = df_data.append(df_data, ignore_index=True)
+        df_data.insert(0,'Year', yr)
+        big_df = big_df.append(df_data, ignore_index=True)
+        big_df = big_df.drop_duplicates()
+    
+    try:
+          big_df.to_csv('big_df.csv', index=False)
+          print('It is done!')
+    except:
+            print("error")
